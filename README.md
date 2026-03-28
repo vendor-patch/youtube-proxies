@@ -6,7 +6,10 @@ This is a fork of [the invidious redirection](https://github.com/iv-org/invidiou
 + Added: Server side random instance selection and redirection
 + Post URL form
 
-### Original
+### Demo
+[Online demo](https://yt.webfan3.de/)
+
+#### Original
 Backstory: https://github.com/iv-org/invidious/issues/1321
 
 Live: https://redirect.invidious.io/
