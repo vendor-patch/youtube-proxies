@@ -1,5 +1,5 @@
 # This fork
-This is a fork of [the invidious redirection](https://github.com/iv-org/invidious-redirect).
+This is a fork of [the invidious redirection](https://git.sr.ht/~cadence/invidious-redirect).
 
 ## What's new?
 + bugfix: The instances JSON structure changed, key is now monitor.uptime
