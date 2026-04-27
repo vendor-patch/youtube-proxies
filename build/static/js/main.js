@@ -37,30 +37,32 @@
 	}
 
 	const destinationPath = window.location.href.slice(window.location.origin.length)
-
+ 
 	q("#watch-on-youtube").href = "https://www.youtube.com" + destinationPath
 
 	for (const e of qa("[data-loading-message]")) {
 		e.textContent = e.getAttribute("data-loading-message")
 	}
 
-	request("https://api.invidious.io/instances.json?sort_by=type,health",
+	//request("https://api.invidious.io/instances.json?sort_by=type,health",
+	request("/instances.json",
 	/** @param {[string, {monitor: any, flag: string, region: string, stats: any, type: string, uri: string}][]} root */ (err, root) => {
 		shuffle(root)
 		root.map(entry => {
-			const healthKnown = !!entry[1].monitor
+			const healthKnown = !!entry.details.monitor && !!entry.details.monitor.uptime
 			return {
-				name: entry[0],
-				details: entry[1],
-				health: +(healthKnown ? entry[1].monitor.uptime : 95),
+				target: entry.target,
+				name: entry.name,
+				details: entry.details,
+				health: +(healthKnown ? entry.details.monitor.uptime : 95),
 				healthKnown
 			}
 		}).filter(entry => {
-			return entry.details.type === "https" && entry.health > 0
+			return entry.details.type === "https" && entry.healthKnown && entry.health > 0
 		}).sort((a, b) => {
 			return b.health - a.health
 		}).forEach(entry => {
-			let target = entry.details.uri.replace(/\/*$/, "") + destinationPath
+			let target = entry.target.replace(/\/*$/, "") + (destinationPath ?? '')
 			const healthUnknown = entry.healthKnown ? "" : "health-unknown "
 			const health = entry.healthKnown ? entry.health.toFixed(0) : "(unknown)"
 			q("#instances-tbody").appendChild(
