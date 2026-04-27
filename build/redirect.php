@@ -13,20 +13,21 @@ if('POST'===$_SERVER['REQUEST_METHOD'] && isset($_POST['url'])){
 	 }
  }
 	
-}//post url
-
+} 
 $instances =  getInvidiousInstances(isset($_GET['v'])
 									 ? '/'.$_GET['v']
 									 : $_SERVER['REQUEST_URI'], 60 * 60, __DIR__.\DIRECTORY_SEPARATOR.'cache_instances.json');
 
 shuffle($instances);
 
-$i = $instances[0];
+ $i = $instances[0];
 
 //print_r($i);
 header('Location: '.$i['target'], 302);
 die('<a href="'.$i['target'].'">Go...</a>');
-
+ 
+	   
+	   
 function getInvidiousInstances(?string $destinationPath = '', ?int $cacheLimit = 300, ?string $cacheFile = 'cache_instances.json')
 {
     $url = "https://api.invidious.io/instances.json?sort_by=type,health";
@@ -57,21 +58,23 @@ function getInvidiousInstances(?string $destinationPath = '', ?int $cacheLimit =
     shuffle($root);
 
     $result = [];
+    $result2 = [];
 
     foreach ($root as $entry) {
         $name = $entry[0];
         $details = $entry[1];
 
-        $healthKnown = isset($details['monitor']);
+        $healthKnown = isset($details['monitor']) && isset($details['monitor']['uptime'])
+			  && ( is_float($details['monitor']['uptime']) || is_numeric($details['monitor']['uptime']));
         $health = $healthKnown
          //   ? (float)$details['monitor']['dailyRatios'][0]['ratio']
 			 ? (float)$details['monitor']['uptime']
-            : 95;
+            : 0;
 
 		 
 		
         // Filter
-        if ($details['type'] !== 'https' || $health <= 0) {
+        if ($details['type'] !== 'https' || $health <= 50) {
             continue;
         }
 
@@ -82,7 +85,14 @@ function getInvidiousInstances(?string $destinationPath = '', ?int $cacheLimit =
             'details' => $details,
             'health' => $health,
             'healthKnown' => $healthKnown,
-            'target' => $target
+            'target' => $target, 
+        ];
+        $result2[] = [
+            'name' => $name,
+            'details' => $details,
+            'health' => $health,
+            'healthKnown' => $healthKnown,
+            'target' =>'https://'.parse_url( $target)['host'], 
         ];
     }
 
@@ -90,6 +100,9 @@ function getInvidiousInstances(?string $destinationPath = '', ?int $cacheLimit =
     usort($result, function ($a, $b) {
         return $b['health'] <=> $a['health'];
     });
-
+    usort($result2, function ($a, $b) {
+        return $b['health'] <=> $a['health'];
+    });
+     file_put_contents(__DIR__.'/instances.json', json_encode($result2));
     return $result;
 }
